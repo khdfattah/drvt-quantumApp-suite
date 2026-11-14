@@ -1,0 +1,268 @@
+DRVT Quantum Engineering Suite | Dr. Khalid ABDELFATTAH M. Osman
+
+
+
+body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f8fafc; }
+.tab-active { border-bottom: 3px solid #1e3a8a; color: #1e3a8a; font-weight: 700; }
+
+
+⚛️ DRVT Quantum Engineering Suite
+Predictive CAD Tool for Cryogenic Vacuum Optimization & Optomechanical Material Selection
+
+
+V_res: 286.398 nm³ | Γ_q: 3.81e-7 | a₀: 0.529 Å
+Framework by Dr. Khalid Abdelfattah
+
+
+🌡️ Vacuum & Coherence Optimizer
+💎 Solid-State Material Selector
+📊 Commercial ROI & Pitch
+
+Microwave-to-Optical Quantum Transducer Design
+Optimize laser pump power and cryogenic vacuum specs to prevent gas-induced quantum decoherence.
+Select Transducer Architecture Preset:
+Harvard / HyperLight TFLN Nanocavity (Q=2e6, V=1.2e-12 cm³)
+High-Confinement Photonic Crystal (Q=1e6, V=5e-13 cm³)
+Macro-Scale Whispering Gallery Resonator (Q=1e7, V=1e-9 cm³)
+
+⚙️ Operating Parameters
+Optical Pump Power (μW) [1e-6 = 1 pW, 1000 = 1 mW]
+Ambient Gas Pressure P_gas (Pa)
+Temperature T (mK)
+Wavelength λ₀ (nm)
+Quality Factor (Q)
+Cavity Volume (cm³)
+Max Allowed Critical Pressure (P_crit)
+-
+
+
+Current Coupling Parameter (Γ)
+-
+
+
+Stored Cavity Photons (N_photons)
+-
+
+
+Required Vacuum Spec
+-
+
+📥 Download Power Scaling Sweep Report (Excel / CSV)
+
+
+📊 Automated Power-Scaling Penalty Table (Current Cavity Specs)
+
+Pump Power	Stored Photons	Occupancy (ROD)	Max Critical Pressure (P_crit)	Vacuum Regime	Status at Current P_gas
+
+Universal DRVT Solid-State Material Selector
+Evaluate crystalline substrates for photo-phononic coupling efficiency relative to the Atomic Bohr Horizon (a₀ = 0.529 Å).
+Candidate Substrate Preset
+Thin-Film Lithium Niobate (TFLN - X-cut)
+Diamond (C)
+Silicon Carbide (SiC - 3C)
+Aluminum Nitride (AlN)
+Silicon (Si)
+Gallium Arsenide (GaAs)
+
+
+Elastic Stiffness C₁₁ (GPa)
+Mass Density ρ (kg/m³)
+Target Phonon Wavelength λ_phonon (nm)
+Sound Velocity (v_s)
+-
+
+
+Resonant Radius (r_res)
+-
+
+
+Horizon Ratio (r_res / a₀)
+-
+
+
+Material	C₁₁ (GPa)	v_s (m/s)	r_res (Å)	r_res / a₀
+
+Commercial Value Proposition for Quantum Hardware Companies
+
+
+1. Cryogenic & Vacuum CAPEX Reduction
+Calculates the exact Critical Pressure (P_crit) required for any optical pump power, preventing costly over-engineering of Ultra-High Vacuum (UHV) systems.
+
+
+2. Maximizing Quantum Throughput
+Quantifies the exact 1:1000 scaling penalty between pump power and ambient pressure, allowing engineers to push conversion clock rates safely up to the Γ_q threshold.
+
+
+3. Cost-Effective Substrate Selection
+Identifies scalable alternatives (such as SiC or AlN) to expensive single-crystal Diamond while preserving Extended Photo-Phononic coupling (r_res / a₀ > 1).
+
+
+
+let chartInstance = null;
+let currentSweepData = [];
+function switchTab(tabId) {
+['tab1', 'tab2', 'tab3'].forEach(id => {
+document.getElementById(id).classList.add('hidden');
+document.getElementById('btn-' + id).classList.remove('tab-active');
+document.getElementById('btn-' + id).classList.add('text-slate-600');
+});
+document.getElementById(tabId).classList.remove('hidden');
+document.getElementById('btn-' + tabId).classList.add('tab-active');
+document.getElementById('btn-' + tabId).classList.remove('text-slate-600');
+}
+function applyArchPreset() {
+const val = document.getElementById('archPreset').value;
+if (val === 'harvard') {
+document.getElementById('qFactor').value = 2.0e6;
+document.getElementById('vCav').value = 1.2e-12;
+document.getElementById('tempMk').value = 10.0;
+document.getElementById('gasPressure').value = 1.50e-9;
+} else if (val === 'photonic') {
+document.getElementById('qFactor').value = 1.0e6;
+document.getElementById('vCav').value = 5.0e-13;
+document.getElementById('tempMk').value = 10.0;
+document.getElementById('gasPressure').value = 1.48e-9;
+} else if (val === 'macro') {
+document.getElementById('qFactor').value = 1.0e7;
+document.getElementById('vCav').value = 1.0e-9;
+document.getElementById('tempMk').value = 20.0;
+document.getElementById('gasPressure').value = 2.00e-8;
+}
+calcTab1();
+}
+function calcTab1() {
+const pUw = parseFloat(document.getElementById('pumpPower').value) || 1.0;
+const pGas = parseFloat(document.getElementById('gasPressure').value) || 1.5e-9;
+const temp = parseFloat(document.getElementById('tempMk').value) || 10.0;
+const lam = parseFloat(document.getElementById('wavelength').value) || 1550;
+const q = parseFloat(document.getElementById('qFactor').value) || 2.0e6;
+const vCav = parseFloat(document.getElementById('vCav').value) || 1.2e-12;
+const V_RES = 286.398;
+const GAMMA_Q = 3.81e-7;
+const nRes = (vCav * 1e21) / V_RES;
+const nPhotons = 6455.7 * (pUw / 1.0) * (q / 1e6) * (lam / 1550.0);
+const pCrit = 1.48e-9 * (1.0 / pUw) * (temp / 10.0) * (1e6 / q) * (1550.0 / lam) * (vCav / 5e-13);
+const gamma = GAMMA_Q * (pGas / pCrit);
+document.getElementById('outPcrit').innerText = pCrit.toExponential(2) + " Pa";
+document.getElementById('outGamma').innerText = gamma.toExponential(2);
+document.getElementById('outPhotons').innerText = nPhotons.toLocaleString(undefined, {maximumFractionDigits: 1});
+document.getElementById('outVacSpec').innerText = pCrit < 1e-7 ? "Ultra-High Vacuum (UHV)" : "High Vacuum (HV)";
+const banner = document.getElementById('statusBanner');
+if (gamma < GAMMA_Q) {
+banner.className = "p-4 rounded-lg text-center font-bold text-base border bg-emerald-50 text-emerald-800 border-emerald-300";
+banner.innerHTML = "✅ QUANTUM COHERENCE PRESERVED (Γ < Γ_q)";
+} else {
+banner.className = "p-4 rounded-lg text-center font-bold text-base border bg-red-50 text-red-800 border-red-300";
+banner.innerHTML = "⚠️ DECOHERENCE DOMINATED (Γ ≥ Γ_q) — Reduce Gas Pressure or Pump Power";
+}
+// Update Chart
+const ctx = document.getElementById('gammaChart').getContext('2d');
+if (chartInstance) chartInstance.destroy();
+chartInstance = new Chart(ctx, {
+type: 'bar',
+data: {
+labels: ['Current System (Γ)', 'Critical Threshold (Γ_q)'],
+datasets: [{
+label: 'Coupling Parameter (Log Scale)',
+data: [Math.max(gamma, 1e-15), GAMMA_Q],
+backgroundColor: [gamma < GAMMA_Q ? '#10b981' : '#ef4444', '#1e3a8a']
+}]
+},
+options: {
+responsive: true,
+scales: { y: { type: 'logarithmic', min: 1e-12 } },
+plugins: { legend: { display: false } }
+}
+});
+// Update Sweep Table
+const powers = [
+{lbl: '1 pW', val: 1e-6}, {lbl: '100 pW', val: 1e-4}, {lbl: '10 nW', val: 1e-2},
+{lbl: '1 μW', val: 1.0}, {lbl: '10 μW', val: 10.0}, {lbl: '100 μW', val: 100.0}, {lbl: '1 mW', val: 1000.0}
+];
+let tbody = '';
+currentSweepData = [['Pump Power', 'Stored Photons', 'ROD', 'Max Critical Pressure (Pa)', 'Vacuum Spec', 'Status']];
+powers.forEach(p => {
+const ph = 6455.7 * p.val * (q / 1e6) * (lam / 1550.0);
+const rod = ph / nRes;
+const pc = 1.48e-9 * (1.0 / p.val) * (temp / 10.0) * (1e6 / q) * (1550.0 / lam) * (vCav / 5e-13);
+const g = GAMMA_Q * (pGas / pc);
+const vac = pc < 1e-7 ? 'UHV' : 'High Vacuum';
+const st = g < GAMMA_Q ? 'Preserved' : 'Decoherence';
+currentSweepData.push([p.lbl, ph.toFixed(1), rod.toExponential(2), pc.toExponential(2), vac, st]);
+tbody += `
+${p.lbl}
+${ph.toLocaleString(undefined, {maximumFractionDigits: 1})}
+${rod.toExponential(2)}
+${pc.toExponential(2)} Pa
+${vac}
+){st}
+`;
+});
+document.getElementById('sweepTableBody').innerHTML = tbody;
+}
+function exportSweepCSV() {
+let csvContent = "data:text/csv;charset=utf-8," + currentSweepData.map(e => e.join(",")).join("\n");
+const encodedUri = encodeURI(csvContent);
+const link = document.createElement("a");
+link.setAttribute("href", encodedUri);
+link.setAttribute("download", "DRVT_Transducer_Sweep_Report.csv");
+document.body.appendChild(link);
+link.click();
+document.body.removeChild(link);
+}
+const materials = {
+tfln: {name: 'Thin-Film Lithium Niobate (TFLN)', c11: 203.0, rho: 4640.0},
+diamond: {name: 'Diamond (C)', c11: 1076.0, rho: 3515.0},
+sic: {name: 'Silicon Carbide (SiC)', c11: 390.0, rho: 3210.0},
+aln: {name: 'Aluminum Nitride (AlN)', c11: 410.0, rho: 3260.0},
+si: {name: 'Silicon (Si)', c11: 165.6, rho: 2329.0},
+gaas: {name: 'Gallium Arsenide (GaAs)', c11: 119.0, rho: 5317.0}
+};
+function applyMatPreset() {
+const key = document.getElementById('matPreset').value;
+document.getElementById('c11Input').value = materials[key].c11;
+document.getElementById('rhoInput').value = materials[key].rho;
+calcTab2();
+}
+function calcTab2() {
+const c11 = parseFloat(document.getElementById('c11Input').value) || 203.0;
+const rho = parseFloat(document.getElementById('rhoInput').value) || 4640.0;
+const lamPh = parseFloat(document.getElementById('lambdaPhInput').value) || 1.0;
+const A0 = 0.529;
+const vs = Math.sqrt((c11 * 1e9) / rho);
+const rRes = 10.0 * Math.pow((5.5133e-4 * (c11 * 1e9)) / (rho * lamPh * lamPh), 0.25);
+const ratio = rRes / A0;
+document.getElementById('outVs').innerText = Math.round(vs).toLocaleString() + " m/s";
+document.getElementById('outRres').innerText = rRes.toFixed(3) + " Å";
+document.getElementById('outRatio').innerText = ratio.toFixed(2) + "x";
+const banner = document.getElementById('matRegimeBanner');
+if (ratio > 1.05) {
+banner.className = "p-4 rounded-lg border text-sm bg-emerald-50 text-emerald-900 border-emerald-300";
+banner.innerHTML = "Regime: Extended Photo-Phononic Coupling (r_res > a₀)
+High lattice rigidity enables spatially extended, high-efficiency optical-to-mechanical transduction.";
+} else if (ratio >= 0.95) {
+banner.className = "p-4 rounded-lg border text-sm bg-amber-50 text-amber-900 border-amber-300";
+banner.innerHTML = "Regime: Transition Boundary (r_res ≈ a₀)
+Photonic and phononic spatial scales match, offering balanced coupling.";
+} else {
+banner.className = "p-4 rounded-lg border text-sm bg-red-50 text-red-900 border-red-300";
+banner.innerHTML = "Regime: Localized Phononic Confinement (r_res < a₀)
+High density and lower stiffness compress the resonant radius below the Bohr horizon.";
+}
+let tbody = '';
+Object.values(materials).forEach(m => {
+const v = Math.sqrt((m.c11 * 1e9) / m.rho);
+const r = 10.0 * Math.pow((5.5133e-4 * (m.c11 * 1e9)) / (m.rho * lamPh * lamPh), 0.25);
+tbody += `
+${m.name}
+${m.c11}
+${Math.round(v).toLocaleString()}
+${r.toFixed(3)}
+${(r / A0).toFixed(2)}x
+`;
+});
+document.getElementById('matBenchBody').innerHTML = tbody;
+}
+// Initialize on load
+window.onload = () => { calcTab1(); calcTab2(); };
+
