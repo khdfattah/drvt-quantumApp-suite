@@ -45,9 +45,9 @@ def photonic_state(lambda_nm):
     return r_nm, aeff, energy, xi
 
 def material_state(c11, rho, lambda_ph=1.0):
-    r_ang = 0.03596 * (
-        ((c11 * 1e9) /
-         (rho * lambda_ph**2)) ** 0.25
+    r_ang = 10.0 * (
+((5.5133e-4 * (c11_val * 1e9)) / (rho_val * (lambda_ph**2))) ** 0.25
+
     )
 
     xi = r_ang / A0
@@ -107,9 +107,9 @@ selected = st.selectbox(
 )
 
 lambda_ph = st.slider(
-    "Target Phonon Wavelength (nm)",
-    0.5,
-    5.0,
+    "Target Phonon Wavelength (um)",
+    1.0,
+    100.0,
     1.0
 )
 
