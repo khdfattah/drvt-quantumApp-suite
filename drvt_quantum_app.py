@@ -404,3 +404,98 @@ else:
       "Target wavelength must be longer than memory emission wavelength for"
       " down-conversion."
   )
+
+# =========================
+# 6. Quantum Network & Repeater Routing Optimizer
+# =========================
+st.divider()
+st.header("Quantum Network & Repeater Routing Optimizer")
+st.markdown(
+    "Evaluate multi-node cryogenic health and automate entanglement routing"
+    " based on local decoherence thresholds ($\\Gamma < \\Gamma_q$)."
+)
+
+st.subheader("Multi-Node Telemetry & Routing Table")
+col_n1, col_n2, col_n3 = st.columns(3)
+
+with col_n1:
+  st.markdown("**Node A (Primary Hub)**")
+  p_a = st.number_input("Node A Pressure (Pa)", value=8.0e-10, format="%.2e")
+  t_a = st.number_input("Node A Temp (mK)", value=10.0, min_value=1.0)
+
+with col_n2:
+  st.markdown("**Node B (Relay Repeater)**")
+  p_b = st.number_input("Node B Pressure (Pa)", value=5.0e-9, format="%.2e")
+  t_b = st.number_input("Node B Temp (mK)", value=15.0, min_value=1.0)
+
+with col_n3:
+  st.markdown("**Node C (Backup Link)**")
+  p_c = st.number_input("Node C Pressure (Pa)", value=1.2e-9, format="%.2e")
+  t_c = st.number_input("Node C Temp (mK)", value=10.0, min_value=1.0)
+
+# Evaluate node coupling parameter Gamma using active transducer settings (pump_uw, q_val, v_cav, lam_opt)
+nodes_input = [
+    ("Node A (Primary Hub)", p_a, t_a),
+    ("Node B (Relay Repeater)", p_b, t_b),
+    ("Node C (Backup Link)", p_c, t_c),
+]
+
+routing_rows = []
+safe_nodes = []
+
+for node_name, p_n, t_n in nodes_input:
+  p_crit_n = (
+      1.48e-9
+      * (1.0 / pump_uw)
+      * (t_n / 10.0)
+      * (1e6 / q_val)
+      * (1550.0 / lam_opt)
+      * (v_cav / 5e-13)
+  )
+  gamma_n = GAMMA_Q * (p_n / p_crit_n)
+  margin_pct = ((GAMMA_Q - gamma_n) / GAMMA_Q) * 100.0
+
+  if gamma_n < GAMMA_Q:
+    status_n = "✅ Active (Coherent)"
+    action_n = "Route Entanglement"
+    safe_nodes.append((node_name, gamma_n))
+  else:
+    status_n = "⚠️ Degraded (Γ ≥ Γ_q)"
+    action_n = "Bypass / Reroute"
+
+  routing_rows.append([
+      node_name,
+      f"{p_n:.2e} Pa",
+      f"{t_n:.1f} mK",
+      f"{gamma_n:.2e}",
+      f"{max(0.0, margin_pct):.1f}%",
+      status_n,
+      action_n,
+  ])
+
+df_routing = pd.DataFrame(
+    routing_rows,
+    columns=[
+        "Quantum Node",
+        "Gas Pressure",
+        "Temp",
+        "Coupling Γ",
+        "Safety Margin",
+        "Node Health",
+        "Routing Decision",
+    ],
+)
+
+st.dataframe(df_routing, use_container_width=True)
+
+if safe_nodes:
+  best_node = min(safe_nodes, key=lambda x: x[1])
+  st.success(
+      f"🌐 **Optimal Routing Path:** Direct quantum traffic through **{best_node[0]}**"
+      f" (Lowest decoherence coupling Γ = {best_node[1]:.2e})."
+  )
+else:
+  st.error(
+      "🚨 **Network Alert:** All nodes exceed the quantum preservation"
+      " threshold (Γ_q). Reduce pump power or switch to pulsed mode."
+  )
