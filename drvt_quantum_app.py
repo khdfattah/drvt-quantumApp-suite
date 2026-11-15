@@ -173,3 +173,79 @@ st.dataframe(
     atlas,
     use_container_width=True
 )
+
+# =========================
+# Cryogenic Vacuum & Coherence Module
+# =========================
+st.divider()
+st.header("Cryogenic Vacuum & Coherence Optimizer")
+st.markdown(
+    "Calculate the critical background gas pressure ($P_{\\text{crit}}$) to"
+    " prevent decoherence ($\\Gamma < \\Gamma_q$)."
+)
+
+preset_exp = st.selectbox(
+    "Experimental Benchmark",
+    [
+        "QphoX / Rigetti Qubit Readout (31 μW)",
+        "Harvard TFLN High-Efficiency Target (100 μW)",
+        "Harvard TFLN Low-Power Baseline (1 μW)",
+        "Custom Operating Point",
+    ],
+)
+
+if preset_exp == "QphoX / Rigetti Qubit Readout (31 μW)":
+  def_p, def_q, def_v, def_t, def_lam = 31.0, 5.0e5, 5.0e-13, 10.0, 1564.89
+elif preset_exp == "Harvard TFLN High-Efficiency Target (100 μW)":
+  def_p, def_q, def_v, def_t, def_lam = 100.0, 2.0e6, 1.2e-12, 10.0, 1550.0
+elif preset_exp == "Harvard TFLN Low-Power Baseline (1 μW)":
+  def_p, def_q, def_v, def_t, def_lam = 1.0, 2.0e6, 1.2e-12, 10.0, 1550.0
+else:
+  def_p, def_q, def_v, def_t, def_lam = 1.0, 1.0e6, 5.0e-13, 10.0, 1550.0
+
+col1, col2 = st.columns(2)
+with col1:
+  pump_uw = st.number_input("Optical Pump Power (μW)", value=def_p, min_value=1e-6)
+  p_gas = st.number_input(
+      "Ambient Gas Pressure P_gas (Pa)", value=1.0e-9, format="%.2e"
+  )
+  temp_mk = st.number_input("Cryogenic Temperature (mK)", value=def_t, min_value=1.0)
+
+with col2:
+  q_val = st.number_input("Cavity Quality Factor (Q)", value=def_q, format="%.1e")
+  v_cav = st.number_input(
+      "Cavity Volume V_cav (cm³)", value=def_v, format="%.1e"
+  )
+  lam_opt = st.number_input("Pump Wavelength (nm)", value=def_lam)
+
+GAMMA_Q = 3.81e-7
+n_res_cav = (v_cav * 1e21) / V_EQ
+n_photons = 6455.7 * (pump_uw / 1.0) * (q_val / 1e6) * (lam_opt / 1550.0)
+rod = n_photons / n_res_cav
+
+p_crit = (
+    1.48e-9
+    * (1.0 / pump_uw)
+    * (temp_mk / 10.0)
+    * (1e6 / q_val)
+    * (1550.0 / lam_opt)
+    * (v_cav / 5e-13)
+)
+gamma = GAMMA_Q * (p_gas / p_crit)
+
+m1, m2, m3, m4 = st.columns(4)
+m1.metric("Stored Photons", f"{n_photons:,.0f}")
+m2.metric("Occupancy (ROD)", f"{rod:.2e}")
+m3.metric("Max P_crit (Pa)", f"{p_crit:.2e}")
+m4.metric("Coupling Γ", f"{gamma:.2e}")
+
+if gamma < GAMMA_Q:
+  st.success(
+      f"✅ QUANTUM COHERENCE PRESERVED (Γ = {gamma:.2e} < Γ_q = 3.81e-7) | Spec:"
+      f" {'UHV' if p_crit < 1e-7 else 'HV'}"
+  )
+else:
+  st.error(
+      f"⚠️ DECOHERENCE DOMINATED (Γ = {gamma:.2e} ≥ Γ_q = 3.81e-7) | Reduce"
+      f" P_gas below {p_crit:.2e} Pa"
+  )
