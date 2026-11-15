@@ -249,3 +249,88 @@ else:
       f"⚠️ DECOHERENCE DOMINATED (Γ = {gamma:.2e} ≥ Γ_q = 3.81e-7) | Reduce"
       f" P_gas below {p_crit:.2e} Pa"
   )
+
+# =========================
+# 4. Pulsed Duty-Cycle & Anisotropic Crystal Cut Module
+# =========================
+st.divider()
+st.header("Advanced Hardware Design: Pulsed Mode & Crystal Cut")
+st.markdown(
+    "Optimize optical pulse duty-cycles to bypass CW decoherence limits and"
+    " evaluate anisotropic crystal orientations."
+)
+
+col_adv1, col_adv2 = st.columns(2)
+
+with col_adv1:
+  st.subheader("1. Pulsed-Mode Duty-Cycle Optimizer")
+  st.caption(
+      "Determine the safe laser duty cycle when continuous-wave (CW) pumping"
+      " exceeds Γ_q."
+  )
+  peak_power_uw = st.number_input(
+      "Peak Pulse Pump Power (μW)", value=31.0, min_value=0.001
+  )
+  target_p_gas = st.number_input(
+      "Chamber Base Pressure (Pa)", value=1.0e-9, format="%.2e"
+  )
+
+  # Calculate CW Gamma at peak power using current Q, V_cav, T, lambda
+  p_crit_peak = (
+      1.48e-9
+      * (1.0 / peak_power_uw)
+      * (temp_mk / 10.0)
+      * (1e6 / q_val)
+      * (1550.0 / lam_opt)
+      * (v_cav / 5e-13)
+  )
+  gamma_peak = GAMMA_Q * (target_p_gas / p_crit_peak)
+
+  if gamma_peak < GAMMA_Q:
+    max_duty = 100.0
+    st.success(
+        f"✅ **100% Duty Cycle (CW Safe):** Peak power is below the decoherence"
+        f" threshold (Γ = {gamma_peak:.2e})."
+    )
+  else:
+    # Safe duty cycle scales inversely with excess coupling above Gamma_q (with 20% safety margin)
+    max_duty = min(99.0, (GAMMA_Q / gamma_peak) * 80.0)
+    st.warning(
+        f"⚡ **Pulsed Operation Required:** Limit laser duty cycle to **≤"
+        f" {max_duty:.2f}%** (e.g., {max_duty*10:.1f} ns pulse per 1 μs period)"
+        " to prevent gas-induced phase noise."
+    )
+
+with col_adv2:
+  st.subheader("2. Anisotropic TFLN Crystal Orientation")
+  st.caption(
+      "Evaluate acoustic-photonic coupling across different Lithium Niobate"
+      " wafer cuts."
+  )
+  crystal_cut = st.selectbox(
+      "Select TFLN Wafer Orientation",
+      [
+          "X-Cut LiNbO₃ (Standard Electro-Optic, C11 = 203 GPa)",
+          "Z-Cut LiNbO₃ (Vertical Acoustic Mode, C33 = 242 GPa)",
+          "Y-Cut LiNbO₃ (SAW / Shear Mode, C22 = 203 GPa)",
+          "128° Y-X Cut LiNbO₃ (High Piezo-Coupling, C_eff = 215 GPa)",
+      ],
+  )
+
+  if "Z-Cut" in crystal_cut:
+    c_eff = 242.0
+  elif "128°" in crystal_cut:
+    c_eff = 215.0
+  else:
+    c_eff = 203.0
+
+  r_cut, xi_cut, state_cut, score_cut = material_state(c_eff, 4640.0, lambda_ph)
+  vs_cut = math.sqrt((c_eff * 1e9) / 4640.0)
+
+  c_a, c_b = st.columns(2)
+  c_a.metric("Acoustic Velocity", f"{vs_cut:,.0f} m/s")
+  c_b.metric("Cut Suitability", f"{score_cut}/100")
+  st.info(
+      f"**Orientation Analysis:** r_res = {r_cut:.3f} Å (ξ = {xi_cut:.2f}) —"
+      f" {state_cut}"
+  )
