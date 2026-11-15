@@ -1,4 +1,3 @@
-
 import math
 import pandas as pd
 import streamlit as st
@@ -45,9 +44,9 @@ def photonic_state(lambda_nm):
     return r_nm, aeff, energy, xi
 
 def material_state(c11, rho, lambda_ph=1.0):
-    r_ang = 10.0 * (
-((5.5133e-4 * (c11_val * 1e9)) / (rho_val * (lambda_ph**2))) ** 0.25
-
+    r_ang = 10 * (
+        ((5.5133e-4 * c11 * 1e9) /
+         (rho * lambda_ph**2)) ** 0.25
     )
 
     xi = r_ang / A0
