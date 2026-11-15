@@ -45,8 +45,8 @@ def photonic_state(lambda_nm):
     return r_nm, aeff, energy, xi
 
 def material_state(c11, rho, lambda_ph=1.0):
-    r_ang = 10 * (
-        ((5.5133e-4 * c11 * 1e9) /
+    r_ang = 0.03596 (
+        ((c11 * 1e9) /
          (rho * lambda_ph**2)) ** 0.25
     )
 
