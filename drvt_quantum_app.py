@@ -187,18 +187,18 @@ st.markdown(
 preset_exp = st.selectbox(
     "Experimental Benchmark",
     [
-        "QphoX / Rigetti Qubit Readout (31 μW)",
-        "Harvard TFLN High-Efficiency Target (100 μW)",
-        "Harvard TFLN Low-Power Baseline (1 μW)",
+        "Qubit Readout (31 μW)",
+        "TFLN High-Efficiency Target (100 μW)",
+        "TFLN Low-Power Baseline (1 μW)",
         "Custom Operating Point",
     ],
 )
 
-if preset_exp == "QphoX / Rigetti Qubit Readout (31 μW)":
+if preset_exp == "Qubit Readout (31 μW)":
   def_p, def_q, def_v, def_t, def_lam = 31.0, 5.0e5, 5.0e-13, 10.0, 1564.89
-elif preset_exp == "Harvard TFLN High-Efficiency Target (100 μW)":
+elif preset_exp == "TFLN High-Efficiency Target (100 μW)":
   def_p, def_q, def_v, def_t, def_lam = 100.0, 2.0e6, 1.2e-12, 10.0, 1550.0
-elif preset_exp == "Harvard TFLN Low-Power Baseline (1 μW)":
+elif preset_exp == "TFLN Low-Power Baseline (1 μW)":
   def_p, def_q, def_v, def_t, def_lam = 1.0, 2.0e6, 1.2e-12, 10.0, 1550.0
 else:
   def_p, def_q, def_v, def_t, def_lam = 1.0, 1.0e6, 5.0e-13, 10.0, 1550.0
