@@ -108,7 +108,7 @@ selected = st.selectbox(
 lambda_ph = st.slider(
     "Target Phonon Wavelength (nm)",
     500.0,
-    500000.0,
+    100000.0,
     1.0
 )
 
