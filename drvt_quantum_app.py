@@ -71,7 +71,7 @@ st.title("⚛️ DRVT Design Engine")
 
 st.markdown("""
 Material screening and resonance-state classification platform
-based on Dynamic Resonant Volume Theory (DRVT).
+based on Dynamic Resonant Volume Theory (DRVT), by Dr. Khalid Abdel Fattah.
 """)
 
 # =========================
