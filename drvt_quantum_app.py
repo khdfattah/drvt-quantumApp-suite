@@ -334,3 +334,73 @@ with col_adv2:
       f"**Orientation Analysis:** r_res = {r_cut:.3f} Å (ξ = {xi_cut:.2f}) —"
       f" {state_cut}"
   )
+
+# =========================
+# 5. Quantum Memory Frequency Conversion Module
+# =========================
+st.divider()
+st.header("Quantum Memory-to-Telecom Frequency Converter")
+st.markdown(
+    "Model cross-band optical frequency conversion from visible/UV quantum"
+    " memories to the 1550 nm telecom C-band using TFLN waveguides."
+)
+
+mem_presets = {
+    "Diamond NV Center (637 nm -> 1550 nm)": 637.0,
+    "Diamond SiV Center (737 nm -> 1550 nm)": 737.0,
+    "Rubidium-87 Atomic Memory (795 nm -> 1550 nm)": 795.0,
+    "Ytterbium-171 Trapped Ion (369.5 nm -> 1550 nm)": 369.5,
+    "Strontium-88 Trapped Ion (422 nm -> 1550 nm)": 422.0,
+    "Custom Quantum Memory Wavelength": 532.0,
+}
+
+col_m1, col_m2 = st.columns([1.2, 1])
+
+with col_m1:
+  selected_mem = st.selectbox(
+      "Select Quantum Memory Platform", list(mem_presets.keys())
+  )
+  lam_mem = st.number_input(
+      "Memory Emission Wavelength λ_mem (nm)",
+      value=mem_presets[selected_mem],
+      min_value=150.0,
+      max_value=1500.0,
+  )
+  lam_telecom = st.number_input(
+      "Target Fiber Telecom Wavelength λ_tel (nm)", value=1550.0
+  )
+
+# Compute DRVT Resonant Parameters for both wavelengths
+r_mem, a_mem, e_mem, xi_mem = photonic_state(lam_mem)
+r_tel, a_tel, e_tel, xi_tel = photonic_state(lam_telecom)
+
+# Pump wavelength required for Difference Frequency Generation (DFG): 1/lam_pump = 1/lam_mem - 1/lam_tel
+if lam_mem < lam_telecom:
+  lam_pump_dfg = 1.0 / ((1.0 / lam_mem) - (1.0 / lam_telecom))
+else:
+  lam_pump_dfg = 0.0
+
+area_expansion = a_tel / a_mem
+energy_shift = e_mem - e_tel
+
+with col_m2:
+  st.subheader("Conversion Metrics")
+  mc1, mc2 = st.columns(2)
+  mc1.metric("Memory r_res (nm)", f"{r_mem:.4f}")
+  mc2.metric("Telecom r_res (nm)", f"{r_tel:.4f}")
+
+  mc3, mc4 = st.columns(2)
+  mc3.metric("Mode Area Expansion", f"{area_expansion:.2f}x")
+  mc4.metric("Energy Shift ΔE (eV)", f"{energy_shift:.3f}")
+
+if lam_pump_dfg > 0:
+  st.success(
+      f"🔗 **DFG Pump Requirement:** Use a **{lam_pump_dfg:.1f} nm** pump laser"
+      f" to bridge {lam_mem} nm → {lam_telecom} nm (Resonant Radius expands by"
+      f" **{(r_tel/r_mem):.2f}x**)."
+  )
+else:
+  st.warning(
+      "Target wavelength must be longer than memory emission wavelength for"
+      " down-conversion."
+  )
